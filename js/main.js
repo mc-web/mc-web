@@ -9,6 +9,8 @@ const screen_width = document.documentElement.clientWidth,
 
 // init
 const renderer = new THREE.WebGLRenderer();
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.setSize(screen_width, screen_height);
 document.getElementsByTagName('body')[0].appendChild(renderer.domElement);
 
@@ -16,14 +18,22 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color( 0xbfd1e5 );
 
 const camera = new THREE.PerspectiveCamera(45, screen_width / screen_height, 0.1, 1000);
-camera.position.set(0,10,0);
+camera.position.set(-10, 10, 10);
 camera.lookAt(new THREE.Vector3(0, 0, 0));
 scene.add(camera);
 
-const directionalLight = new THREE.DirectionalLight(0xffffff, 1000);
-scene.add(directionalLight);
+var spotLight = new THREE.SpotLight( 0xffffff, 1.3 );
+spotLight.position.set( -20, 20, -20 );
+spotLight.castShadow = true;
+spotLight.shadow.mapSize.width = 1024;
+spotLight.shadow.mapSize.height = 1024;
+scene.add( spotLight );
 
+var light = new THREE.AmbientLight(0xffffff, 1.1); // soft white light
+scene.add( light );
 
+let cameraHelper = new THREE.CameraHelper(spotLight.shadow.camera);
+scene.add(cameraHelper);
 
 // generate cubes
 let geometry = new THREE.BoxGeometry(a, a, a);
@@ -52,6 +62,8 @@ for(let i = 0; i < WORLD_LENGTH; i++) {
                 cube = new THREE.Mesh(geometry, dirt_materials);
             }
 
+            cube.castShadow = true;
+            cube.receiveShadow = true;
             cube.position.x = i * a;
             cube.position.y = h * a;
             cube.position.z = j * a;
@@ -99,9 +111,8 @@ function generateMaterialArr(texture_arr) {
         texture.magFilter = THREE.NearestFilter;
         texture.minFilter = THREE.NearestFilter;
         materials.push(
-            new THREE.MeshBasicMaterial({
+            new THREE.MeshLambertMaterial({
                 map: texture,
-                side: THREE.DoubleSide,
             })
         );
     }
