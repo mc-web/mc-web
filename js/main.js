@@ -1,5 +1,7 @@
 import { ImprovedNoise as improved_noise } from "./libs/ImprovedNoise.js";
 import { Person } from "./libs/Person.js";
+import Stats from "./libs/Stats.js";
+
 const WORLD_WIDTH = 20;
 const WORLD_LENGTH = 20;
 const a = 1; //方块边长
@@ -77,13 +79,17 @@ for(let i = 0; i < WORLD_LENGTH; i++) {
 
 // let orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
 let person = new Person(camera, renderer.domElement);
-
-
+let stats = new Stats();
+stats.showPanel(0);
+document.body.appendChild(stats.dom);
 
 window.requestAnimationFrame(step);
-function step() {
+function step(timestamp) {
+  stats.begin();
+  stats.end();
+  person.update(timestamp);
   renderer.render(scene, camera);
-  window.requestAnimationFrame(step)
+  window.requestAnimationFrame(step);
 }
 
 function generateHeight(width, height) {

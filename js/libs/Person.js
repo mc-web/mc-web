@@ -1,4 +1,5 @@
 const PI = Math.PI;
+
 class Person {
   constructor(camera, element) {
     this.camera = camera;
@@ -10,17 +11,16 @@ class Person {
     this.min_pitch = PI * 0.15;
     this.rotation = PI;     // 0 ~ 2PI  x轴正方向为0 从上往下看顺时针递增 camera所在的位置为准
     this.vector = new THREE.Vector3(); // 视线单位向量
-    this.updateLookAt();
 
     // 灵敏度
     this.sensity_x = 0.3;
     this.sensity_y = 0.3;
-    this.speed = 1 / 5;
+    this.speed = 3; // 1代表1s移动1格
 
     this.pointer_locked = false;
 
     this.move_keys = ["w", "s", "a", "d"];
-    this.pressing_key_flag = 0; // 对应的位表示对应index的move_key是否现在被按下了
+    this.pressing_keys = Array(this.move_keys.length).fill(0);
 
     this.init();
   }
@@ -36,6 +36,7 @@ class Person {
       }
     });
 
+    // 视角移动
     this.element.addEventListener("mousemove", (e) => {
       if(this.pointer_locked) {
         this.rotation += e.movementX / this.element.clientWidth * PI * 2 * this.sensity_x;
@@ -44,68 +45,21 @@ class Person {
         if(this.pitch > this.max_pitch) this.pitch = this.max_pitch;
         if(this.pitch < this.min_pitch) this.pitch = this.min_pitch;
         this.pitch %= PI;
-        this.updateLookAt();
       }
     });
 
     document.addEventListener("keydown", (e) => {
       if(this.pointer_locked) {
         let idx = this.move_keys.indexOf(e.key);
-        if(idx !== -1) this.pressing_key_flag |= 1 << idx;
+        if(idx !== -1) this.pressing_keys[idx] = 1;
       }
     });
-
-    this.registerAnimationFrame();
-  }
-
-  /**
-   * 
-   * @param {*} idx 
-   * 0: front，
-   * 1: end，
-   * 2: left,
-   * 3: right
-   * 
-   */
-  move(idx) {
-    let vector = new THREE.Vector3().copy(this.vector);
-    vector.y = 0;
-    vector.normalize().divideScalar(1 / this.speed); // 去掉视线y方向分量之后的单位向量
-    
-    let rotate_matrix = new THREE.Matrix4(), vector2 = new THREE.Vector3();
-    rotate_matrix.makeRotationY(PI / 2);
-    vector2.copy(vector).applyMatrix4(rotate_matrix).divideScalar(1 / this.speed);
-
-    if(idx === 0) {
-      this.camera.position.sub(vector);
-    } else if(idx === 1) {
-      this.camera.position.add(vector);
-    } else if(idx === 2) {
-      this.camera.position.sub(vector2);
-    } else if(idx === 3) {
-      this.camera.position.add(vector2);
-    }
-
-    this.updateLookAt(false);
-  }
-
-  /**
-   * 
-   * @param {*} vector_update 
-   * 在视线并没有更新的时候传入false，避免不必要的计算
-   * 
-   */
-  updateLookAt(vector_update = true) {
-    if(vector_update) {
-      this.vector.y = Math.cos(this.pitch);
-      let temp = Math.sin(this.pitch);
-      this.vector.x = Math.cos(this.rotation) * temp;
-      this.vector.z = Math.sin(this.rotation) * temp;
-    }
-
-    let lookat_point = new THREE.Vector3();
-    lookat_point.copy(this.position).sub(this.vector);
-    this.camera.lookAt(lookat_point);
+    document.addEventListener("keyup", (e) => {
+      if(this.pointer_locked) {
+        let idx = this.move_keys.indexOf(e.key);
+        if(idx !== -1) this.pressing_keys[idx] = 0;
+      }
+    });
   }
 
   lockPointer(elem) {
@@ -120,12 +74,45 @@ class Person {
     }
   }
 
-  registerAnimationFrame() {
-    let step = (timestamp) => {
-      window.requestAnimationFrame(step);
-    };
+  update(timestamp) {
+    // 计算移动方向上的单位向量
+    let vertical_vector = new THREE.Vector3();
+    vertical_vector.x = Math.cos(this.rotation) * Math.sin(this.pitch);
+    vertical_vector.z = Math.sin(this.rotation) * Math.sin(this.pitch);
+    vertical_vector.normalize(); // 去掉视线y方向分量之后的单位向量
+    
+    let rotate_matrix = new THREE.Matrix4(), horizontal_vector = new THREE.Vector3();
+    rotate_matrix.makeRotationY(PI / 2);
+    horizontal_vector.copy(vertical_vector).applyMatrix4(rotate_matrix);
 
-    window.requestAnimationFrame(step);
+    // 按 速度/按下的key 更新position
+    if(!this.last_timestamp) this.last_timestamp = timestamp;
+    let diff = timestamp - this.last_timestamp;
+    for(let i = 0; i < this.pressing_keys.length; i++) {
+      if(this.pressing_keys[i] === 1) {
+        if(i === 0) {
+          this.position.sub(new THREE.Vector3().copy(vertical_vector).divideScalar(1000 / this.speed / diff));
+        } else if(i === 1) {
+          this.position.add(new THREE.Vector3().copy(vertical_vector).divideScalar(1000 / this.speed / diff));
+        } else if(i === 2) {
+          this.position.sub(new THREE.Vector3().copy(horizontal_vector).divideScalar(1000 / this.speed / diff));
+        } else if(i === 3) {
+          this.position.add(new THREE.Vector3().copy(horizontal_vector).divideScalar(1000 / this.speed / diff));
+        }
+      }
+    }
+    this.last_timestamp = timestamp;
+    this.camera.position.copy(this.position);
+    
+    let vector = new THREE.Vector3();
+    vector.y = Math.cos(this.pitch);
+    let temp = Math.sin(this.pitch);
+    vector.x = Math.cos(this.rotation) * temp;
+    vector.z = Math.sin(this.rotation) * temp;
+
+    let lookat_point = new THREE.Vector3();
+    lookat_point.copy(this.position).sub(vector);
+    this.camera.lookAt(lookat_point);
   }
 }
 
