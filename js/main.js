@@ -1,5 +1,6 @@
 import { ImprovedNoise as improved_noise } from "./libs/ImprovedNoise.js";
 import { Person } from "./libs/Person.js";
+import { Collision } from "./libs/Person.js";
 import Stats from "./libs/Stats.js";
 
 const WORLD_WIDTH = 20;
@@ -79,6 +80,8 @@ for(let i = 0; i < WORLD_LENGTH; i++) {
 
 // let orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
 let person = new Person(camera, renderer.domElement);
+new Collision(person);
+
 let stats = new Stats();
 stats.showPanel(0);
 document.body.appendChild(stats.dom);
@@ -106,7 +109,7 @@ function generateHeight(width, height) {
     }
     for (let i = 0; i < size; i++) {
       let x = i % width, 
-        y = (i / width) | 0;
+      y = (i / width) | 0;
       data[i] += perlin.noise(x / quality, y / quality, z) * quality;
     }
     quality *= 4;
