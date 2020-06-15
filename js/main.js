@@ -53,11 +53,13 @@ let dirt_materials = generateMaterialArr([
 ]);
 
 let heights_arr = generateHeight(WORLD_WIDTH, WORLD_LENGTH);
+for(let i = 0; i < heights_arr.length; i++) heights_arr[i] = Math.abs(heights_arr[i] * 0.2 | 0);
+
 for(let i = 0; i < WORLD_LENGTH; i++) {
   for(let j = 0; j < WORLD_WIDTH; j++) {
-    for(let h = 0; h < Math.abs(heights_arr[i * WORLD_WIDTH + j] * 0.2 | 0); h++) {
+    for(let h = 0; h < heights_arr[i * WORLD_WIDTH + j]; h++) {
       let cube;
-      if(h === Math.abs(heights_arr[i * WORLD_WIDTH + j] * 0.2 | 0) - 1) {
+      if(h === heights_arr[i * WORLD_WIDTH + j] - 1) {
         // grass_dirt
         cube = new THREE.Mesh(geometry, grass_dirt_materials);
       } else {

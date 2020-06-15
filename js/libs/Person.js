@@ -104,6 +104,7 @@ class Person {
     this.last_timestamp = timestamp;
     this.camera.position.copy(this.position);
     
+    // 更新lookat
     let vector = new THREE.Vector3();
     vector.y = Math.cos(this.pitch);
     let temp = Math.sin(this.pitch);
