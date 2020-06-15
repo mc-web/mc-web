@@ -10,7 +10,6 @@ class Person {
     this.max_pitch = PI * 0.99;
     this.min_pitch = PI * 0.15;
     this.rotation = PI;     // 0 ~ 2PI  x轴正方向为0 从上往下看顺时针递增 camera所在的位置为准
-    this.vector = new THREE.Vector3(); // 视线单位向量
 
     // 灵敏度
     this.sensity_x = 0.3;
@@ -21,6 +20,8 @@ class Person {
 
     this.move_keys = ["w", "s", "a", "d"];
     this.pressing_keys = Array(this.move_keys.length).fill(0);
+
+    this.enable_direction = Array(6).fill(true); // 前后左右上下 有碰撞时为false
 
     this.init();
   }
@@ -111,9 +112,9 @@ class Person {
     vector.x = Math.cos(this.rotation) * temp;
     vector.z = Math.sin(this.rotation) * temp;
 
-    let lookat_point = new THREE.Vector3();
-    lookat_point.copy(this.position).sub(vector);
-    this.camera.lookAt(lookat_point);
+    this.lookat_point = new THREE.Vector3();
+    this.lookat_point.copy(this.position).sub(vector);
+    this.camera.lookAt(this.lookat_point);
   }
 }
 

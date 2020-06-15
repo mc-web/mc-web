@@ -1,6 +1,8 @@
 import { ImprovedNoise as improved_noise } from "./libs/ImprovedNoise.js";
 import { Person } from "./libs/Person.js";
-import { Collision } from "./libs/Person.js";
+import { Collision } from "./libs/Collision.js";
+import { Cube } from "./libs/Cube.js";
+import { getMaterialArrHash } from "./libs/getMaterialArrHash.js";
 import Stats from "./libs/Stats.js";
 
 const WORLD_WIDTH = 20;
@@ -39,50 +41,42 @@ scene.add( light );
 let cameraHelper = new THREE.CameraHelper(spotLight.shadow.camera);
 scene.add(cameraHelper);
 
+let position_hash = {};
+
 // generate cubes
-let geometry = new THREE.BoxGeometry(a, a, a);
-
-let grass_dirt_materials = generateMaterialArr([
-  "./textures/grass_dirt.png", "./textures/grass_dirt.png",
-  "./textures/grass.png", "./textures/dirt.png",
-  "./textures/grass_dirt.png", "./textures/grass_dirt.png"
-]);
-
-let dirt_materials = generateMaterialArr([
-  "./textures/dirt.png","./textures/dirt.png","./textures/dirt.png",
-  "./textures/dirt.png","./textures/dirt.png","./textures/dirt.png"
-]);
-
 let heights_arr = generateHeight(WORLD_WIDTH, WORLD_LENGTH);
 for(let i = 0; i < heights_arr.length; i++) heights_arr[i] = Math.abs(heights_arr[i] * 0.2 | 0);
 
+let material_hash = new getMaterialArrHash();
+let geometries_hash = {};
 for(let i = 0; i < WORLD_LENGTH; i++) {
   for(let j = 0; j < WORLD_WIDTH; j++) {
     for(let h = 0; h < heights_arr[i * WORLD_WIDTH + j]; h++) {
       let cube;
+      let position = new THREE.Vector3(i * a, h * a, j * a);
       if(h === heights_arr[i * WORLD_WIDTH + j] - 1) {
         // grass_dirt
-        cube = new THREE.Mesh(geometry, grass_dirt_materials);
+        if(!geometries_hash["grass_dirt"]) geometries_hash["grass_dirt"] = [];
+        cube = new Cube(material_hash, "grass_dirt", position);
+        geometries_hash["grass_dirt"].push(cube.geometry);
       } else {
-        // grass
-        cube = new THREE.Mesh(geometry, dirt_materials);
+        // dirt
+        if(!geometries_hash["dirt"]) geometries_hash["dirt"] = [];
+        cube = new Cube(material_hash, "dirt", position);
+        geometries_hash["dirt"].push(cube.geometry);
       }
-
-      cube.castShadow = true;
-      cube.receiveShadow = true;
-      cube.position.x = i * a;
-      cube.position.y = h * a;
-      cube.position.z = j * a;
-      scene.add(cube);
+      position_hash[[position.x, position.y, position.z]] = cube;
     }
   }
 }
-
+for(let type in geometries_hash) {
+  scene.add(new THREE.Mesh(THREE.BufferGeometryUtils.mergeBufferGeometries(geometries_hash[type]), material_hash[type]));
+}
 
 
 // let orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
 let person = new Person(camera, renderer.domElement);
-new Collision(person);
+let person_collision = new Collision(person, position_hash);
 
 let stats = new Stats();
 stats.showPanel(0);
@@ -92,7 +86,10 @@ window.requestAnimationFrame(step);
 function step(timestamp) {
   stats.begin();
   stats.end();
+
   person.update(timestamp);
+  person_collision.update(timestamp);
+  
   renderer.render(scene, camera);
   window.requestAnimationFrame(step);
 }
@@ -117,21 +114,4 @@ function generateHeight(width, height) {
     quality *= 4;
   }
   return data;
-}
-
-function generateMaterialArr(texture_arr) {
-  let materials = [];
-  for(let url of texture_arr) {
-    let texture = new THREE.TextureLoader().load(url);
-    texture.magFilter = THREE.NearestFilter;
-    texture.minFilter = THREE.NearestFilter;
-    materials.push(
-      new THREE.MeshLambertMaterial({
-        map: texture,
-        side: THREE.DoubleSide, 
-        shadowSide: THREE.BackSide
-      })
-    );
-  }
-  return materials;
 }
