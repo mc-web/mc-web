@@ -1,6 +1,5 @@
 import { ImprovedNoise as improved_noise } from "./libs/ImprovedNoise.js";
 import { Person } from "./libs/Person.js";
-import { Collision } from "./libs/Person.js";
 import Stats from "./libs/Stats.js";
 
 const WORLD_WIDTH = 20;
@@ -54,6 +53,7 @@ let dirt_materials = generateMaterialArr([
 ]);
 
 let heights_arr = generateHeight(WORLD_WIDTH, WORLD_LENGTH);
+let env_boxs_position_hash = {};
 for(let i = 0; i < heights_arr.length; i++) heights_arr[i] = Math.abs(heights_arr[i] * 0.2 | 0);
 
 for(let i = 0; i < WORLD_LENGTH; i++) {
@@ -63,9 +63,11 @@ for(let i = 0; i < WORLD_LENGTH; i++) {
       if(h === heights_arr[i * WORLD_WIDTH + j] - 1) {
         // grass_dirt
         cube = new THREE.Mesh(geometry, grass_dirt_materials);
+        env_boxs_position_hash[[i, h, j]] = "grass_dirt";
       } else {
         // grass
         cube = new THREE.Mesh(geometry, dirt_materials);
+        env_boxs_position_hash[[i, h, j]] = "dirt";
       }
 
       cube.castShadow = true;
@@ -78,11 +80,9 @@ for(let i = 0; i < WORLD_LENGTH; i++) {
   }
 }
 
-
-
 // let orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
+Person.get_env_position_hash(env_boxs_position_hash);
 let person = new Person(camera, renderer.domElement);
-new Collision(person);
 
 let stats = new Stats();
 stats.showPanel(0);

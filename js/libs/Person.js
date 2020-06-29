@@ -1,4 +1,5 @@
 const PI = Math.PI;
+let env_boxs_position_hash;
 
 class Person {
   constructor(camera, element) {
@@ -21,6 +22,8 @@ class Person {
 
     this.move_keys = ["w", "s", "a", "d"];
     this.pressing_keys = Array(this.move_keys.length).fill(0);
+
+    this.gravity = 0.01; // 掉落速度 相对于this.speed
 
     this.init();
   }
@@ -75,32 +78,53 @@ class Person {
   }
 
   update(timestamp) {
+    if(!this.last_timestamp) this.last_timestamp = timestamp;
+    let diff = timestamp - this.last_timestamp;
+
     // 计算移动方向上的单位向量
+    let moving_vector = new THREE.Vector3(0, this.gravity, 0);
+    
+    // 按 速度&按下的key 修改这一帧的移动向量
     let vertical_vector = new THREE.Vector3();
     vertical_vector.x = Math.cos(this.rotation) * Math.sin(this.pitch);
+    vertical_vector.y = this.gravity;
     vertical_vector.z = Math.sin(this.rotation) * Math.sin(this.pitch);
     vertical_vector.normalize(); // 去掉视线y方向分量之后的单位向量
-    
-    let rotate_matrix = new THREE.Matrix4(), horizontal_vector = new THREE.Vector3();
+    vertical_vector.divideScalar(1000 / this.speed / diff); 
+
+    let rotate_matrix = new THREE.Matrix4(), horizontal_vector = new THREE.Vector3(); // 向右边的单位向量
     rotate_matrix.makeRotationY(PI / 2);
     horizontal_vector.copy(vertical_vector).applyMatrix4(rotate_matrix);
 
-    // 按 速度/按下的key 更新position
-    if(!this.last_timestamp) this.last_timestamp = timestamp;
-    let diff = timestamp - this.last_timestamp;
     for(let i = 0; i < this.pressing_keys.length; i++) {
       if(this.pressing_keys[i] === 1) {
         if(i === 0) {
-          this.position.sub(new THREE.Vector3().copy(vertical_vector).divideScalar(1000 / this.speed / diff));
+          moving_vector.copy(vertical_vector);
         } else if(i === 1) {
-          this.position.add(new THREE.Vector3().copy(vertical_vector).divideScalar(1000 / this.speed / diff));
+          moving_vector.copy(vertical_vector).divideScalar(-1);
         } else if(i === 2) {
-          this.position.sub(new THREE.Vector3().copy(horizontal_vector).divideScalar(1000 / this.speed / diff));
+          moving_vector.copy(horizontal_vector);
         } else if(i === 3) {
-          this.position.add(new THREE.Vector3().copy(horizontal_vector).divideScalar(1000 / this.speed / diff));
+          moving_vector.copy(horizontal_vector).divideScalar(-1);
         }
       }
     }
+
+    // 判断碰撞
+    console.log([Math.floor(this.position.x), Math.floor(this.position.y) - 1, Math.floor(this.position.z)], env_boxs_position_hash);
+    if(env_boxs_position_hash[[Math.floor(this.position.x), Math.floor(this.position.y) - 1, Math.floor(this.position.z)]]) moving_vector.y = 0;
+    if(vertical_vector.x >= 0) {
+      if(env_boxs_position_hash[[Math.ceil(this.position.x), Math.floor(this.position.y), Math.floor(this.position.z)]]) moving_vector.x = 0;
+    } else {
+      if(env_boxs_position_hash[[Math.floor(this.position.x), Math.floor(this.position.y), Math.floor(this.position.z)]]) moving_vector.x = 0;
+    }
+    if(vertical_vector.z >= 0) {
+      if(env_boxs_position_hash[[Math.floor(this.position.x), Math.floor(this.position.y), Math.ceil(this.position.z)]]) moving_vector.z = 0;
+    } else {
+      if(env_boxs_position_hash[[Math.floor(this.position.x), Math.floor(this.position.y), Math.floor(this.position.z)]]) moving_vector.z = 0;
+    }
+
+    this.position.sub(moving_vector);
     this.last_timestamp = timestamp;
     this.camera.position.copy(this.position);
     
@@ -114,6 +138,10 @@ class Person {
     let lookat_point = new THREE.Vector3();
     lookat_point.copy(this.position).sub(vector);
     this.camera.lookAt(lookat_point);
+  }
+
+  static get_env_position_hash(hash) {
+    env_boxs_position_hash = hash;
   }
 }
 
