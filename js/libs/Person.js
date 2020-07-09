@@ -23,7 +23,7 @@ class Person {
     this.move_keys = ["w", "s", "a", "d"];
     this.pressing_keys = Array(this.move_keys.length).fill(0);
 
-    this.gravity = 0.01; // 掉落速度 相对于this.speed
+    this.gravity = 0.1; // 掉落速度 相对于this.speed
 
     this.init();
   }
@@ -111,8 +111,11 @@ class Person {
     }
 
     // 判断碰撞
-    console.log([Math.floor(this.position.x), Math.floor(this.position.y) - 1, Math.floor(this.position.z)], env_boxs_position_hash);
+    console.log(this.position, [Math.floor(this.position.x), Math.floor(this.position.y) - 1, Math.floor(this.position.z)], env_boxs_position_hash);
     if(env_boxs_position_hash[[Math.floor(this.position.x), Math.floor(this.position.y) - 1, Math.floor(this.position.z)]]) moving_vector.y = 0;
+
+
+
     if(vertical_vector.x >= 0) {
       if(env_boxs_position_hash[[Math.ceil(this.position.x), Math.floor(this.position.y), Math.floor(this.position.z)]]) moving_vector.x = 0;
     } else {
@@ -124,10 +127,15 @@ class Person {
       if(env_boxs_position_hash[[Math.floor(this.position.x), Math.floor(this.position.y), Math.floor(this.position.z)]]) moving_vector.z = 0;
     }
 
+
+    
     this.position.sub(moving_vector);
     this.last_timestamp = timestamp;
     this.camera.position.copy(this.position);
-    
+    this.camera.position.x = Math.round(this.camera.position.x * 100) / 100;    
+    this.camera.position.y = Math.round(this.camera.position.y * 100) / 100;    
+    this.camera.position.z = Math.round(this.camera.position.z * 100) / 100;    
+
     // 更新lookat
     let vector = new THREE.Vector3();
     vector.y = Math.cos(this.pitch);

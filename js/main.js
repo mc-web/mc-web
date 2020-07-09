@@ -21,8 +21,8 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color( 0xbfd1e5 );
 
 const camera = new THREE.PerspectiveCamera(45, screen_width / screen_height, 0.1, 1000);
-camera.position.set(1, 10, 10);
-camera.lookAt(new THREE.Vector3(2, 10, 10));
+camera.position.set(1, 20, 10);
+camera.lookAt(new THREE.Vector3(2, 20, 10));
 scene.add(camera);
 
 var spotLight = new THREE.SpotLight( 0xffffff, 1.3 );
