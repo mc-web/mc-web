@@ -111,24 +111,12 @@ class Person {
     }
 
     // 判断碰撞
-    console.log(this.position, [Math.floor(this.position.x), Math.floor(this.position.y) - 1, Math.floor(this.position.z)], env_boxs_position_hash);
-    if(env_boxs_position_hash[[Math.floor(this.position.x), Math.floor(this.position.y) - 1, Math.floor(this.position.z)]]) moving_vector.y = 0;
+    let next_position = new THREE.Vector3().copy(this.position).sub(moving_vector);
 
+    if(env_boxs_position_hash[[Math.round(next_position.x), Math.floor(next_position.y) - 1, Math.round(next_position.z)]]) moving_vector.y = 0;
+    if(env_boxs_position_hash[[Math.round(next_position.x), Math.floor(next_position.y), Math.round(next_position.z)]]) moving_vector.x = 0;
+    if(env_boxs_position_hash[[Math.round(next_position.x), Math.floor(next_position.y), Math.round(next_position.z)]]) moving_vector.z = 0;
 
-
-    if(vertical_vector.x >= 0) {
-      if(env_boxs_position_hash[[Math.ceil(this.position.x), Math.floor(this.position.y), Math.floor(this.position.z)]]) moving_vector.x = 0;
-    } else {
-      if(env_boxs_position_hash[[Math.floor(this.position.x), Math.floor(this.position.y), Math.floor(this.position.z)]]) moving_vector.x = 0;
-    }
-    if(vertical_vector.z >= 0) {
-      if(env_boxs_position_hash[[Math.floor(this.position.x), Math.floor(this.position.y), Math.ceil(this.position.z)]]) moving_vector.z = 0;
-    } else {
-      if(env_boxs_position_hash[[Math.floor(this.position.x), Math.floor(this.position.y), Math.floor(this.position.z)]]) moving_vector.z = 0;
-    }
-
-
-    
     this.position.sub(moving_vector);
     this.last_timestamp = timestamp;
     this.camera.position.copy(this.position);
