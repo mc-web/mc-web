@@ -1,5 +1,6 @@
 import { ImprovedNoise as improved_noise } from "./libs/ImprovedNoise.js";
 import { Person } from "./libs/Person.js";
+import { Collision } from "./libs/Collision.js";
 import Stats from "./libs/Stats.js";
 
 const WORLD_WIDTH = 20;
@@ -37,6 +38,8 @@ scene.add( light );
 
 let cameraHelper = new THREE.CameraHelper(spotLight.shadow.camera);
 scene.add(cameraHelper);
+
+
 
 // generate cubes
 let geometry = new THREE.BoxGeometry(a, a, a);
@@ -80,8 +83,9 @@ for(let i = 0; i < WORLD_LENGTH; i++) {
   }
 }
 
-// let orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
-Person.get_env_position_hash(env_boxs_position_hash);
+
+
+Collision.getEnvPositionHash(env_boxs_position_hash);
 let person = new Person(camera, renderer.domElement);
 
 let stats = new Stats();
@@ -92,7 +96,8 @@ window.requestAnimationFrame(step);
 function step(timestamp) {
   stats.begin();
   stats.end();
-  person.update(timestamp);
+  person.updateMovingVector(timestamp);
+  person.updatePosition();
   renderer.render(scene, camera);
   window.requestAnimationFrame(step);
 }

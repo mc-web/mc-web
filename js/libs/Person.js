@@ -11,7 +11,7 @@ class Person {
     this.max_pitch = PI * 0.99;
     this.min_pitch = PI * 0.15;
     this.rotation = PI;     // 0 ~ 2PI  x轴正方向为0 从上往下看顺时针递增 camera所在的位置为准
-    this.vector = new THREE.Vector3(); // 视线单位向量
+    this.moving_vector = new THREE.Vector3();
 
     // 灵敏度
     this.sensity_x = 0.3;
@@ -77,7 +77,7 @@ class Person {
     }
   }
 
-  update(timestamp) {
+  updateMovingVector(timestamp) {
     if(!this.last_timestamp) this.last_timestamp = timestamp;
     let diff = timestamp - this.last_timestamp;
 
@@ -109,16 +109,13 @@ class Person {
         }
       }
     }
-
-    // 判断碰撞
-    let next_position = new THREE.Vector3().copy(this.position).sub(moving_vector);
-
-    if(env_boxs_position_hash[[Math.round(next_position.x), Math.floor(next_position.y) - 1, Math.round(next_position.z)]]) moving_vector.y = 0;
-    if(env_boxs_position_hash[[Math.round(next_position.x), Math.floor(next_position.y), Math.round(next_position.z)]]) moving_vector.x = 0;
-    if(env_boxs_position_hash[[Math.round(next_position.x), Math.floor(next_position.y), Math.round(next_position.z)]]) moving_vector.z = 0;
-
-    this.position.sub(moving_vector);
     this.last_timestamp = timestamp;
+
+    this.moving_vector.copy(moving_vector);
+  }
+
+  updatePosition() {
+    this.position.sub(this.moving_vector);
     this.camera.position.copy(this.position);
     this.camera.position.x = Math.round(this.camera.position.x * 100) / 100;    
     this.camera.position.y = Math.round(this.camera.position.y * 100) / 100;    
