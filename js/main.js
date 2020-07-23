@@ -96,8 +96,9 @@ window.requestAnimationFrame(step);
 function step(timestamp) {
   stats.begin();
   stats.end();
-  person.updateMovingVector(timestamp);
-  person.updatePosition();
+
+  person.update(timestamp);
+  
   renderer.render(scene, camera);
   window.requestAnimationFrame(step);
 }

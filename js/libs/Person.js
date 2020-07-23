@@ -1,5 +1,5 @@
 const PI = Math.PI;
-let env_boxs_position_hash;
+import { Collision } from "./Collision.js";
 
 class Person {
   constructor(camera, element) {
@@ -115,7 +115,7 @@ class Person {
   }
 
   updatePosition() {
-    this.position.sub(this.moving_vector);
+    // this.position.sub(this.moving_vector);
     this.camera.position.copy(this.position);
     this.camera.position.x = Math.round(this.camera.position.x * 100) / 100;    
     this.camera.position.y = Math.round(this.camera.position.y * 100) / 100;    
@@ -133,8 +133,10 @@ class Person {
     this.camera.lookAt(lookat_point);
   }
 
-  static get_env_position_hash(hash) {
-    env_boxs_position_hash = hash;
+  update(timestamp) {
+    this.updateMovingVector(timestamp);
+    Collision.judge(this);
+    this.updatePosition();
   }
 }
 
