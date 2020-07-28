@@ -115,7 +115,7 @@ class Person {
   }
 
   updatePosition() {
-    // this.position.sub(this.moving_vector);
+    this.position.sub(this.moving_vector);
     this.camera.position.copy(this.position);
     this.camera.position.x = Math.round(this.camera.position.x * 100) / 100;    
     this.camera.position.y = Math.round(this.camera.position.y * 100) / 100;    

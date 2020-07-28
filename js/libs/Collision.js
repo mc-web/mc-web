@@ -1,13 +1,8 @@
 let env_boxs_position_hash;
-let moving_obj_arr = [];
 
 class Collision {
   static getEnvPositionHash(hash) {
     env_boxs_position_hash = hash;
-  }
-
-  static register(obj) {
-    moving_obj_arr.push(obj);
   }
 
   /**
@@ -22,8 +17,15 @@ class Collision {
     next_position.y = Math.round(next_position.y * 100) / 100;
     next_position.z = Math.round(next_position.z * 100) / 100;
 
-    // y 轴
-    if(env_boxs_position_hash[next_position.x, next_position.y, next_position.z])
+    if(env_boxs_position_hash[[Math.round(obj.position.x), Math.floor(next_position.y) - 1, Math.round(obj.position.z)]]) {
+      obj.moving_vector.y = 0;
+    }
+    if(env_boxs_position_hash[[Math.round(next_position.x), Math.floor(obj.position.y) - 1, Math.round(obj.position.z)]]) {
+      obj.moving_vector.x = 0;
+    }
+    if(env_boxs_position_hash[[Math.round(obj.position.x), Math.floor(obj.position.y) - 1, Math.round(next_position.z)]]) {
+      obj.moving_vector.z = 0;
+    }
   }
 }
 
