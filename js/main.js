@@ -75,9 +75,6 @@ for(let i = 0; i < WORLD_LENGTH; i++) {
     }
   }
 }
-// for(let type in geometries_hash) {
-//   scene.add(new THREE.Mesh(THREE.BufferGeometryUtils.mergeBufferGeometries(geometries_hash[type]), material_hash[type]));
-// }
 
 
 Collision.getEnvPositionHash(env_boxs_position_hash);
