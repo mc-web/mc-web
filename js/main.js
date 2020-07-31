@@ -1,8 +1,8 @@
-import { ImprovedNoise as improved_noise } from "./libs/ImprovedNoise.js";
 import { Person } from "./libs/Person.js";
 import { Collision } from "./libs/Collision.js";
 import { Cube } from "./libs/Cube.js";
-import { getMaterialArrHash } from "./libs/getMaterialArrHash.js";
+import { getMaterialArrHash } from "./libs/GetMaterialArrHash.js";
+import { generateHeight } from "./libs/GenerateHeight.js";
 import Stats from "./libs/Stats.js";
 
 const WORLD_WIDTH = 20;
@@ -28,24 +28,23 @@ camera.position.set(1, 20, 10);
 camera.lookAt(new THREE.Vector3(2, 20, 10));
 scene.add(camera);
 
-var spotLight = new THREE.SpotLight( 0xffffff, 1.3 );
+let spotLight = new THREE.SpotLight( 0xffffff, 1.3 );
 spotLight.position.set( -20, 20, -20 );
 spotLight.castShadow = true;
 spotLight.shadow.mapSize.width = 1024;
 spotLight.shadow.mapSize.height = 1024;
 scene.add( spotLight );
 
-var light = new THREE.AmbientLight(0xffffff, 1.1); // soft white light
+let light = new THREE.AmbientLight(0xffffff, 1.1); // soft white light
 scene.add( light );
 
 let cameraHelper = new THREE.CameraHelper(spotLight.shadow.camera);
 scene.add(cameraHelper);
 
-let position_hash = {};
 
 // generate cubes
-let heights_arr = generateHeight(WORLD_WIDTH, WORLD_LENGTH);
 let env_boxs_position_hash = {};
+let heights_arr = generateHeight(WORLD_WIDTH, WORLD_LENGTH);
 for(let i = 0; i < heights_arr.length; i++) heights_arr[i] = Math.abs(heights_arr[i] * 0.2 | 0);
 
 let material_hash = new getMaterialArrHash();
@@ -66,13 +65,19 @@ for(let i = 0; i < WORLD_LENGTH; i++) {
         cube = new Cube(material_hash, "dirt", position);
         geometries_hash["dirt"].push(cube.geometry);
       }
-      position_hash[[position.x, position.y, position.z]] = cube;
+      env_boxs_position_hash[[position.x, position.y, position.z]] = cube;
+      cube.castShadow = true;
+      cube.receiveShadow = true;
+      cube.position.x = i * a;
+      cube.position.y = h * a;
+      cube.position.z = j * a;
+      scene.add(cube);
     }
   }
 }
-for(let type in geometries_hash) {
-  scene.add(new THREE.Mesh(THREE.BufferGeometryUtils.mergeBufferGeometries(geometries_hash[type]), material_hash[type]));
-}
+// for(let type in geometries_hash) {
+//   scene.add(new THREE.Mesh(THREE.BufferGeometryUtils.mergeBufferGeometries(geometries_hash[type]), material_hash[type]));
+// }
 
 
 Collision.getEnvPositionHash(env_boxs_position_hash);
@@ -91,26 +96,4 @@ function step(timestamp) {
   
   renderer.render(scene, camera);
   window.requestAnimationFrame(step);
-}
-
-function generateHeight(width, height) {
-  let data = [], perlin = new improved_noise(),
-    size = width * height, 
-    quality = 2, 
-    z = Math.random() * 100;
-
-  for (let j = 0; j < 4; j++) {
-    if (j === 0) {
-      for (let i = 0; i < size; i++) {
-        data[i] = 0;
-      }
-    }
-    for (let i = 0; i < size; i++) {
-      let x = i % width, 
-      y = (i / width) | 0;
-      data[i] += perlin.noise(x / quality, y / quality, z) * quality;
-    }
-    quality *= 4;
-  }
-  return data;
 }
