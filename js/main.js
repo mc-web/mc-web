@@ -24,8 +24,8 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color( 0xbfd1e5 );
 
 const camera = new THREE.PerspectiveCamera(45, screen_width / screen_height, 0.1, 1000);
-camera.position.set(1, 10, 10);
-camera.lookAt(new THREE.Vector3(2, 10, 10));
+camera.position.set(1, 20, 10);
+camera.lookAt(new THREE.Vector3(2, 20, 10));
 scene.add(camera);
 
 var spotLight = new THREE.SpotLight( 0xffffff, 1.3 );
@@ -45,6 +45,7 @@ let position_hash = {};
 
 // generate cubes
 let heights_arr = generateHeight(WORLD_WIDTH, WORLD_LENGTH);
+let env_boxs_position_hash = {};
 for(let i = 0; i < heights_arr.length; i++) heights_arr[i] = Math.abs(heights_arr[i] * 0.2 | 0);
 
 let material_hash = new getMaterialArrHash();
@@ -74,9 +75,8 @@ for(let type in geometries_hash) {
 }
 
 
-// let orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
+Collision.getEnvPositionHash(env_boxs_position_hash);
 let person = new Person(camera, renderer.domElement);
-let person_collision = new Collision(person, position_hash);
 
 let stats = new Stats();
 stats.showPanel(0);
@@ -88,7 +88,6 @@ function step(timestamp) {
   stats.end();
 
   person.update(timestamp);
-  person_collision.update(timestamp);
   
   renderer.render(scene, camera);
   window.requestAnimationFrame(step);
