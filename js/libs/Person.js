@@ -1,4 +1,5 @@
 const PI = Math.PI;
+import { Collision } from "./Collision.js";
 
 class Person {
   constructor(camera, element) {
@@ -10,6 +11,7 @@ class Person {
     this.max_pitch = PI * 0.99;
     this.min_pitch = PI * 0.15;
     this.rotation = PI;     // 0 ~ 2PI  x轴正方向为0 从上往下看顺时针递增 camera所在的位置为准
+    this.moving_vector = new THREE.Vector3();
 
     // 灵敏度
     this.sensity_x = 0.3;
@@ -21,7 +23,7 @@ class Person {
     this.move_keys = ["w", "s", "a", "d"];
     this.pressing_keys = Array(this.move_keys.length).fill(0);
 
-    this.enable_direction = Array(6).fill(true); // 前后左右上下 有碰撞时为false
+    this.gravity = 0.1; // 掉落速度 相对于this.speed
 
     this.init();
   }
@@ -75,36 +77,50 @@ class Person {
     }
   }
 
-  update(timestamp) {
+  updateMovingVector(timestamp) {
+    if(!this.last_timestamp) this.last_timestamp = timestamp;
+    let diff = timestamp - this.last_timestamp;
+
     // 计算移动方向上的单位向量
+    let moving_vector = new THREE.Vector3(0, this.gravity, 0);
+    
+    // 按 速度&按下的key 修改这一帧的移动向量
     let vertical_vector = new THREE.Vector3();
     vertical_vector.x = Math.cos(this.rotation) * Math.sin(this.pitch);
+    vertical_vector.y = this.gravity;
     vertical_vector.z = Math.sin(this.rotation) * Math.sin(this.pitch);
     vertical_vector.normalize(); // 去掉视线y方向分量之后的单位向量
-    
-    let rotate_matrix = new THREE.Matrix4(), horizontal_vector = new THREE.Vector3();
+    vertical_vector.divideScalar(1000 / this.speed / diff); 
+
+    let rotate_matrix = new THREE.Matrix4(), horizontal_vector = new THREE.Vector3(); // 向右边的单位向量
     rotate_matrix.makeRotationY(PI / 2);
     horizontal_vector.copy(vertical_vector).applyMatrix4(rotate_matrix);
 
-    // 按 速度/按下的key 更新position
-    if(!this.last_timestamp) this.last_timestamp = timestamp;
-    let diff = timestamp - this.last_timestamp;
     for(let i = 0; i < this.pressing_keys.length; i++) {
       if(this.pressing_keys[i] === 1) {
         if(i === 0) {
-          this.position.sub(new THREE.Vector3().copy(vertical_vector).divideScalar(1000 / this.speed / diff));
+          moving_vector.copy(vertical_vector);
         } else if(i === 1) {
-          this.position.add(new THREE.Vector3().copy(vertical_vector).divideScalar(1000 / this.speed / diff));
+          moving_vector.copy(vertical_vector).divideScalar(-1);
         } else if(i === 2) {
-          this.position.sub(new THREE.Vector3().copy(horizontal_vector).divideScalar(1000 / this.speed / diff));
+          moving_vector.copy(horizontal_vector);
         } else if(i === 3) {
-          this.position.add(new THREE.Vector3().copy(horizontal_vector).divideScalar(1000 / this.speed / diff));
+          moving_vector.copy(horizontal_vector).divideScalar(-1);
         }
       }
     }
     this.last_timestamp = timestamp;
+
+    this.moving_vector.copy(moving_vector);
+  }
+
+  updatePosition() {
+    this.position.sub(this.moving_vector);
     this.camera.position.copy(this.position);
-    
+    this.camera.position.x = Math.round(this.camera.position.x * 100) / 100;    
+    this.camera.position.y = Math.round(this.camera.position.y * 100) / 100;    
+    this.camera.position.z = Math.round(this.camera.position.z * 100) / 100;    
+
     // 更新lookat
     let vector = new THREE.Vector3();
     vector.y = Math.cos(this.pitch);
@@ -115,6 +131,12 @@ class Person {
     this.lookat_point = new THREE.Vector3();
     this.lookat_point.copy(this.position).sub(vector);
     this.camera.lookAt(this.lookat_point);
+  }
+
+  update(timestamp) {
+    this.updateMovingVector(timestamp);
+    Collision.judge(this);
+    this.updatePosition();
   }
 }
 
