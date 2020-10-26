@@ -1,5 +1,8 @@
+import { getMaterialArrHash } from "./GetMaterialArrHash.js";
+let material_hash = new getMaterialArrHash();
+
 class Cube {
-  constructor(material_hash, type, position) {
+  constructor(type, position) {
     this.geometry = new THREE.BoxBufferGeometry(1, 1, 1);
     let cube = new THREE.Mesh(this.geometry, material_hash[type]);
 

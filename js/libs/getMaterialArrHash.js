@@ -25,16 +25,15 @@ class getMaterialArrHash {
       texture.minFilter = THREE.NearestFilter;
       materials.push(
         new THREE.MeshLambertMaterial({
+          // color: Math.random() * 0xffffff
           map: texture,
-          side: THREE.DoubleSide, 
+          side: THREE.DoubleSide,
           shadowSide: THREE.BackSide
         })
       );
     }
     return materials;
   }
-
-
 }
 
 export { getMaterialArrHash };

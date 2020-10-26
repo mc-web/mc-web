@@ -1,7 +1,6 @@
 import { Person } from "./libs/Person.js";
 import { Collision } from "./libs/Collision.js";
 import { Cube } from "./libs/Cube.js";
-import { getMaterialArrHash } from "./libs/GetMaterialArrHash.js";
 import { generateHeight } from "./libs/GenerateHeight.js";
 import Stats from "./libs/Stats.js";
 
@@ -30,9 +29,9 @@ scene.add(camera);
 
 let spotLight = new THREE.SpotLight( 0xffffff, 1.3 );
 spotLight.position.set( -20, 20, -20 );
-spotLight.castShadow = true;
-spotLight.shadow.mapSize.width = 1024;
-spotLight.shadow.mapSize.height = 1024;
+// spotLight.castShadow = true;
+// spotLight.shadow.mapSize.width = 1024;
+// spotLight.shadow.mapSize.height = 1024;
 scene.add( spotLight );
 
 let light = new THREE.AmbientLight(0xffffff, 1.1); // soft white light
@@ -47,7 +46,6 @@ let env_boxs_position_hash = {};
 let heights_arr = generateHeight(WORLD_WIDTH, WORLD_LENGTH);
 for(let i = 0; i < heights_arr.length; i++) heights_arr[i] = Math.abs(heights_arr[i] * 0.2 | 0);
 
-let material_hash = new getMaterialArrHash();
 let geometries_hash = {};
 for(let i = 0; i < WORLD_LENGTH; i++) {
   for(let j = 0; j < WORLD_WIDTH; j++) {
@@ -57,12 +55,12 @@ for(let i = 0; i < WORLD_LENGTH; i++) {
       if(h === heights_arr[i * WORLD_WIDTH + j] - 1) {
         // grass_dirt
         if(!geometries_hash["grass_dirt"]) geometries_hash["grass_dirt"] = [];
-        cube = new Cube(material_hash, "grass_dirt", position);
+        cube = new Cube("grass_dirt", position);
         geometries_hash["grass_dirt"].push(cube.geometry);
       } else {
         // dirt
         if(!geometries_hash["dirt"]) geometries_hash["dirt"] = [];
-        cube = new Cube(material_hash, "dirt", position);
+        cube = new Cube("dirt", position);
         geometries_hash["dirt"].push(cube.geometry);
       }
       env_boxs_position_hash[[position.x, position.y, position.z]] = cube;
